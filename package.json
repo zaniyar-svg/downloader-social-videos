@@ -1,0 +1,8 @@
+{
+  "name": "snapkurd",
+  "version": "1.0.0",
+  "description": "داونلۆدەری ڤیدیۆی سۆشیال میدیا",
+  "dependencies": {
+    "ytdl-core": "^4.11.5"
+  }
+}
