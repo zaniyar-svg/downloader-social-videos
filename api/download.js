@@ -1,24 +1,19 @@
-// api/download.js
 export default async function handler(req, res) {
-    // تەنها POST پشتگیری دەکەین
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'تەنها شێوەی POST پشتگیری دەکرێت' });
+        return res.status(405).json({ error: 'تەنها POST' });
     }
 
     const { url } = req.body;
-
-    // پشکنینی لینک
-    if (!url || !url.trim()) {
-        return res.status(400).json({ error: 'تکایە لینکێک بنوسە' });
+    if (!url) {
+        return res.status(400).json({ error: 'لینک پێویستە' });
     }
 
     try {
-        // ============================================
-        //  بەشی TikTok (بە پڕۆکسی خۆڕایی)
-        // ============================================
-        if (url.includes('tiktok.com')) {
-            const proxyUrl = `https://api.tikmate.app/api/lookup?url=${encodeURIComponent(url)}`;
-            const response = await fetch(proxyUrl);
+        // ============ TikTok ============
+        if (url.includes('tiktok.com') || url.includes('vt.tiktok.com')) {
+            // هەوڵی یەکەم: بە TikMate API
+            const apiUrl = `https://api.tikmate.app/api/lookup?url=${encodeURIComponent(url)}`;
+            const response = await fetch(apiUrl);
             const data = await response.json();
 
             if (data && data.url) {
@@ -29,42 +24,49 @@ export default async function handler(req, res) {
                     thumbnail: data.thumb || ''
                 });
             } else {
-                return res.status(404).json({ error: 'ڤیدیۆ نەدۆزرایەوە لەسەر TikTok' });
+                // هەوڵی دووەم: بە پڕۆکسی جیاواز
+                const proxyUrl = `https://corsproxy.io/?https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`;
+                const proxyResponse = await fetch(proxyUrl);
+                const proxyData = await proxyResponse.json();
+
+                if (proxyData && proxyData.data && proxyData.data.play) {
+                    return res.status(200).json({
+                        success: true,
+                        downloadUrl: proxyData.data.play,
+                        title: proxyData.data.title || 'ڤیدیۆی TikTok',
+                        thumbnail: proxyData.data.cover || ''
+                    });
+                }
             }
         }
 
-        // ============================================
-        //  بەشی YouTube (بە ytdl-core)
-        // ============================================
+        // ============ YouTube ============
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            // پێویستە یەکەمجار ytdl-core دابمەزرێنیت
-            // لە ترمیناڵدا: npm install ytdl-core
-            const ytdl = await import('ytdl-core');
-            const info = await ytdl.default.getInfo(url);
-            const format = ytdl.default.chooseFormat(info.formats, { 
-                quality: 'highestvideo',
-                filter: 'videoandaudio'
-            });
+            try {
+                const ytdl = await import('ytdl-core');
+                const info = await ytdl.default.getInfo(url);
+                const format = ytdl.default.chooseFormat(info.formats, {
+                    quality: 'highestvideo',
+                    filter: 'videoandaudio'
+                });
 
-            return res.status(200).json({
-                success: true,
-                downloadUrl: format.url,
-                title: info.videoDetails.title,
-                thumbnail: info.videoDetails.thumbnails[0].url
-            });
+                return res.status(200).json({
+                    success: true,
+                    downloadUrl: format.url,
+                    title: info.videoDetails.title,
+                    thumbnail: info.videoDetails.thumbnails[0]?.url || ''
+                });
+            } catch (ytError) {
+                return res.status(404).json({ error: 'ڤیدیۆی YouTube نەدۆزرایەوە' });
+            }
         }
 
-        // ============================================
-        //  پلاتفۆرمەکانی تر
-        // ============================================
-        return res.status(400).json({ 
-            error: 'ئەم پلاتفۆرمە پشتگیری ناکرێت. تکایە لینکی TikTok یان YouTube بەکاربهێنە.' 
-        });
+        return res.status(400).json({ error: 'ئەم پلاتفۆرمە پشتگیری ناکرێت' });
 
     } catch (error) {
         console.error('Error:', error);
-        return res.status(500).json({ 
-            error: 'هەڵەیەکی ناوەکی ڕوویدا. تکایە دووبارە هەوڵبدە.' 
+        return res.status(500).json({
+            error: 'هەڵەیەکی ناوەکی ڕوویدا. تکایە دووبارە هەوڵبدە'
         });
     }
 }
