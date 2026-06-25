@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="kmr" dir="rtl" id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="siteTitle">داونلۆدەری ڤیدیۆ - بێ واتەرمارک</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+        }
+        .btn-gradient:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        input::placeholder {
+            color: #6b7280;
+        }
+        input:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
+    </style>
+</head>
+<body class="text-gray-100 flex flex-col">
+
+    <!-- هێدر -->
+    <header class="p-4 bg-black/30 backdrop-blur-md border-b border-gray-800/50">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-bold text-cyan-400">Snap<span class="text-white">Kurd</span></h1>
+            <div class="flex items-center gap-2 bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-700">
+                <span class="text-sm">🌐</span>
+                <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-transparent text-sm text-gray-200 focus:outline-none cursor-pointer">
+                    <option value="bhd">کوردی (بەهدینی)</option>
+                    <option value="sor">کوردی (سۆرانی)</option>
+                    <option value="ara">العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- ناوەڕۆک -->
+    <main class="flex-grow flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-2xl text-center space-y-8">
+
+            <!-- سەردێڕ -->
+            <div>
+                <h2 id="mainHeading" class="text-3xl md:text-5xl font-extrabold tracking-tight">
+                    داونلۆدکردنی ڤیدیۆی <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">سۆشیال میدیا</span>
+                </h2>
+                <p id="mainDesc" class="text-gray-400 text-base md:text-lg mt-3">لینکی ڤیدیۆکە دابنێ و بە بەرزترین کوالێتی و بێ واتەرمارک داونلۆدی بکە</p>
+            </div>
+
+            <!-- بۆکسی سەرەکی -->
+            <div class="glass p-6 rounded-2xl shadow-2xl">
+                <div class="flex flex-col md:flex-row gap-3">
+                    <input type="text" id="videoUrl" placeholder="لینکی TikTok، Instagram یان YouTube لێرە دابنێ..."
+                        class="flex-grow px-5 py-4 rounded-xl bg-gray-800/70 border border-gray-700 text-white placeholder-gray-500 transition text-right">
+                    <button onclick="handleDownload()" id="btnText" class="btn-gradient px-8 py-4 font-bold rounded-xl shadow-lg shadow-cyan-500/20 text-white whitespace-nowrap cursor-pointer">
+                        دەرهێنانی ڤیدیۆ
+                    </button>
+                </div>
+
+                <!-- بارکردن -->
+                <div id="loading" class="hidden mt-6 text-cyan-400 font-medium animate-pulse">
+                    ⏳ چاوەڕوان بە... ڤیدیۆ تێگەهشتن...
+                </div>
+
+                <!-- ئەنجام -->
+                <div id="result" class="hidden mt-6 p-4 bg-gray-800/80 rounded-xl border border-gray-700 fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span id="statusIcon" class="text-2xl">✅</span>
+                        <p id="statusMsg" class="text-green-400 font-semibold">ڤیدیۆ بە سەرکەوتوویی دۆزرایەوە!</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <a id="downloadBtn" href="#" target="_blank" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg shadow-md transition flex items-center gap-2">
+                            📥 داونلۆد بکە
+                        </a>
+                        <button onclick="copyLink()" id="copyBtn" class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg shadow-md transition flex items-center gap-2">
+                            📋 لینک کۆپی بکە
+                        </button>
+                    </div>
+                </div>
+
+                <!-- هەڵە -->
+                <div id="errorMsg" class="hidden mt-4 text-red-400 text-sm bg-red-900/20 p-3 rounded-lg border border-red-800/30 fade-in"></div>
+            </div>
+
+            <!-- تایبەتمەندییەکان -->
+            <div class="grid grid-cols-3 gap-4 text-center text-xs md:text-sm text-gray-400">
+                <div class="p-3 glass rounded-xl">⚡ خێرا و بێبەرامبەر</div>
+                <div class="p-3 glass rounded-xl">🛡️ بێ واتەرمارک</div>
+                <div class="p-3 glass rounded-xl">🎬 کوالێتی HD</div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- فووتەر -->
+    <footer class="p-5 text-center text-gray-600 text-sm border-t border-gray-900/50">
+        <p id="footerText">© 2026 SnapKurd. هەموو مافەکان پارێزراون.</p>
+    </footer>
+
+    <script>
+        // ==================== وهرگێڕان ====================
+        const translations = {
+            bhd: {
+                title: "داونلۆدەری ڤیدیۆ - بێ واتەرمارک",
+                heading: 'داونلۆدکردنی ڤیدیۆی <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">سۆشیال میدیا</span>',
+                desc: "لینکی ڤیدیۆکە دابنێ و بە بەرزترین کوالێتی و بێ واتەرمارک داونلۆدی بکە",
+                placeholder: "لینکی TikTok، Instagram یان YouTube لێرە دابنێ...",
+                btn: "دەرهێنانی ڤیدیۆ",
+                loading: "⏳ چاوەڕوان بە... ڤیدیۆ تێگەهشتن...",
+                success: "ڤیدیۆ بە سەرکەوتوویی دۆزرایەوە!",
+                footer: "© 2026 SnapKurd. هەموو مافەکان پارێزراون."
+            },
+            sor: {
+                title: "داونلۆدەری ڤیدیۆ - بێ واتەرمارک",
+                heading: 'داونلۆدکردنی ڤیدیۆی <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">سۆشیال میدیا</span>',
+                desc: "لینکی ڤیدیۆکە دابنێ و بە بەرزترین کوالێتی و بێ واتەرمارک داونلۆدی بکە",
+                placeholder: "لینکی TikTok، Instagram یان YouTube لێرە دابنێ...",
+                btn: "دەرهێنانی ڤیدیۆ",
+                loading: "⏳ چاوەڕوان بە... ڤیدیۆ تێگەهشتن...",
+                success: "ڤیدیۆ بە سەرکەوتوویی دۆزرایەوە!",
+                footer: "© 2026 SnapKurd. هەموو مافەکان پارێزراون."
+            },
+            ara: {
+                title: "تحميل فيديوهات التواصل الاجتماعي",
+                heading: 'تحميل فيديوهات <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">التواصل الاجتماعي</span>',
+                desc: "ضع رابط الفيديو وحمله بأعلى جودة وبدون علامة مائية",
+                placeholder: "ضع رابط TikTok، Instagram أو YouTube هنا...",
+                btn: "استخراج الفيديو",
+                loading: "⏳ يرجى الانتظار... جاري تحليل الفيديو...",
+                success: "تم العثور على الفيديو بنجاح!",
+                footer: "© 2026 SnapKurd. جميع الحقوق محفوظة."
+            },
+            en: {
+                title: "Social Media Video Downloader",
+                heading: 'Download <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Social Media</span> Videos',
+                desc: "Paste the video link and download it in high quality without watermarks",
+                placeholder: "Paste TikTok, Instagram or YouTube link here...",
+                btn: "Extract Video",
+                loading: "⏳ Please wait... Processing video...",
+                success: "Video found successfully!",
+                footer: "© 2026 SnapKurd. All rights reserved."
+            }
+        };
+
+        function changeLanguage(lang) {
+            const t = translations[lang];
+            if (!t) return;
+            document.getElementById('siteTitle').textContent = t.title;
+            document.getElementById('mainHeading').innerHTML = t.heading;
+            document.getElementById('mainDesc').textContent = t.desc;
+            document.getElementById('videoUrl').placeholder = t.placeholder;
+            document.getElementById('btnText').textContent = t.btn;
+            document.getElementById('loading').textContent = t.loading;
+            document.getElementById('statusMsg').textContent = t.success;
+            document.getElementById('footerText').textContent = t.footer;
+            document.getElementById('htmlTag').setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
+        }
+        document.addEventListener('DOMContentLoaded', () => changeLanguage('bhd'));
+
+        // ==================== کارکردنی سەرەکی ====================
+        const API_URL = '/api/download';
+
+        async function handleDownload() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const btn = document.getElementById('btnText');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('errorMsg');
+            const statusMsg = document.getElementById('statusMsg');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const statusIcon = document.getElementById('statusIcon');
+
+            // پشکنینی لینک
+            if (!url) {
+                showError('❌ تکایە لینکێکی دروست بنوسە');
+                return;
+            }
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                showError('❌ تکایە لینکێکی تەواو (https://...) بنوسە');
+                return;
+            }
+
+            // ڕووکار پاک بکەوە
+            hideError();
+            result.classList.add('hidden');
+            loading.classList.remove('hidden');
+            btn.disabled = true;
+            btn.textContent = '⏳ چاوەڕوان...';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'هەڵەیەک ڕوویدا');
+                }
+
+                // نمایشی ئەنجام
+                statusIcon.textContent = '✅';
+                statusMsg.textContent = 'ڤیدیۆ بە سەرکەوتوویی دۆزرایەوە!';
+                statusMsg.className = 'text-green-400 font-semibold';
+                downloadBtn.href = data.downloadUrl || data.videoUrl;
+                downloadBtn.setAttribute('target', '_blank');
+                result.classList.remove('hidden');
+
+            } catch (err) {
+                statusIcon.textContent = '❌';
+                statusMsg.textContent = err.message || 'هەڵەیەک ڕوویدا';
+                statusMsg.className = 'text-red-400 font-semibold';
+                result.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+                btn.disabled = false;
+                const lang = document.getElementById('langSelect').value;
+                btn.textContent = translations[lang]?.btn || 'دەرهێنانی ڤیدیۆ';
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').classList.add('hidden');
+        }
+
+        function copyLink() {
+            const link = document.getElementById('downloadBtn').href;
+            if (link && link !== '#') {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(link).then(() => {
+                        const btn = document.getElementById('copyBtn');
+                        btn.textContent = '✅ کۆپی کرا!';
+                        setTimeout(() => btn.textContent = '📋 لینک کۆپی بکە', 2000);
+                    });
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = link;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    textarea.remove();
+                    alert('لینک کۆپی کرا!');
+                }
+            }
+        }
+
+        document.getElementById('videoUrl').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleDownload();
+        });
+    </script>
+
+</body>
+</html>
